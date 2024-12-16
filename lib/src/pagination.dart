@@ -45,16 +45,25 @@ mixin PagedContentControllerMixin<T> {
 
   /// Loads the next page of content.
   ///
-  /// [lastItem] is the last item in the current list of contents, or null if this is the first page.
+  /// [lastContent] is the last item in the current list of contents, or null if this is the first page.
   /// Returns a [Future] that completes with a list of new items to append.
   ///
   /// This method should be implemented by classes mixing in [PagedContentControllerMixin].
   /// It will be called automatically by the mixin to load more content when needed.
   ///
   /// The implementation should:
-  /// - Use [lastItem] to determine what content to load next
-  /// - Return an empty list when there is no more content
-  /// - Throw an exception if loading fails, which will be caught by the mixin
+  /// - Use [lastContent] to determine what content to load next (e.g. as a cursor or offset)
+  /// - Return an empty list when there is no more content available
+  /// - Throw an exception if loading fails, which will be caught and handled by the mixin
+  /// 
+  /// Example implementation:
+  /// ```dart
+  /// Future<List<Item>> loadNextContents(Item? lastContent) async {
+  ///   final offset = lastContent?.id ?? 0;
+  ///   final response = await api.getItems(offset: offset, limit: 20);
+  ///   return response.items;
+  /// }
+  /// ```
   ///
   Future<List<T>> loadNextContents(T? lastContent);
 }
