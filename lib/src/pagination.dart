@@ -88,7 +88,7 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       if (canLoad) {
         _loadMore(context, ref);
 
-        return buildLoading(context, ref);
+        return buildLoading(context, ref, false);
       } else {
         return buildEmpty(context, ref);
       }
@@ -102,7 +102,7 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       itemCount: contents.length + (canLoad ? 1 : 0),
       itemBuilder: (context, index) {
         if (canLoad && index == contents.length) {
-          return buildLoading(context, ref);
+          return buildLoading(context, ref, true);
         }
 
         final content = contents[index];
@@ -125,7 +125,7 @@ abstract class PagedContentList<T> extends ConsumerWidget {
           BuildContext context, WidgetRef ref, PagedContent<T> pagedContent) =>
       pagedContent.contents;
 
-  Widget buildLoading(BuildContext context, WidgetRef ref);
+  Widget buildLoading(BuildContext context, WidgetRef ref, bool isListItem);
   Widget buildEmpty(BuildContext context, WidgetRef ref);
   Widget buildError(BuildContext context, WidgetRef ref, Object? error);
 
