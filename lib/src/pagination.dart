@@ -21,6 +21,7 @@ mixin PagedContentControllerMixin<T> {
 
   Future init(Ref ref) async {
     final link = ref.keepAlive();
+    await Future.delayed(Duration.zero);
     await loadMore();
     link.close();
   }
