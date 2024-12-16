@@ -21,16 +21,16 @@ mixin PagedContentControllerMixin<T> {
 
   Future init(Ref ref) async {
     final link = ref.keepAlive();
-    await _loadMore();
+    await loadMore();
     link.close();
   }
 
-  Future _loadMore() async {
+  Future loadMore() async {
     if (state.isEnd || state.onLoad) return;
 
     state = state.copyWith(onLoad: true, hasError: false, error: null);
     try {
-      final newContents = await loadMore(state.contents.lastOrNull);
+      final newContents = await loadNextContents(state.contents.lastOrNull);
 
       state = state.copyWith(
           isEnd: newContents.isEmpty,
@@ -55,7 +55,7 @@ mixin PagedContentControllerMixin<T> {
   /// - Return an empty list when there is no more content
   /// - Throw an exception if loading fails, which will be caught by the mixin
   ///
-  Future<List<T>> loadMore(T? lastItem);
+  Future<List<T>> loadNextContents(T? lastContent);
 }
 
 abstract class PagedContentList<T> extends ConsumerWidget {
