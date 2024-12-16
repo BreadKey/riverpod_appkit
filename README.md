@@ -15,3 +15,5 @@ dart run riverpod_appkit init
 ### Pagination Support
 
 The package provides a robust pagination system through the `PagedContent` class and `PagedContentControllerMixin`.
+
+See the [example](example) for more details.
