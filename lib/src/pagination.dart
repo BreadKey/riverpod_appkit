@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -15,13 +14,15 @@ class PagedContent<T> with _$PagedContent<T> {
       Object? error}) = _PagedContent;
 }
 
-mixin PagedContentControllerMixin<T> {
-  PagedContent<T> get state;
-  set state(PagedContent<T> value);
+mixin PagedContentControllerMixin<T> on AutoDisposeNotifier<PagedContent<T>> {
+  PagedContent<T> doBuild() {
+    state = const PagedContent();
+    init();
+    return state;
+  }
 
-  Future init(Ref ref) async {
+  Future init() async {
     final link = ref.keepAlive();
-    await Future.delayed(Duration.zero);
     await loadMore();
     link.close();
   }
@@ -55,7 +56,7 @@ mixin PagedContentControllerMixin<T> {
   /// - Use [lastContent] to determine what content to load next (e.g. as a cursor or offset)
   /// - Return an empty list when there is no more content available
   /// - Throw an exception if loading fails, which will be caught and handled by the mixin
-  /// 
+  ///
   /// Example implementation:
   /// ```dart
   /// Future<List<Item>> loadNextContents(Item? lastContent) async {
