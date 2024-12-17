@@ -17,6 +17,7 @@ class PagedContent<T> with _$PagedContent<T> {
 mixin PagedContentControllerMixin<T> {
   PagedContent<T> get state;
   set state(PagedContent<T> value);
+
   /// Initializes the paged content state and triggers initial data loading.
   ///
   /// This is called by [build] in classes mixing in [PagedContentControllerMixin].
@@ -27,7 +28,7 @@ mixin PagedContentControllerMixin<T> {
   ///
   /// The returned state will be used as the initial value before any data is loaded.
   PagedContent<T> doBuild(Ref ref) {
-    state = const PagedContent();
+    state = PagedContent<T>();
     init(ref);
     return state;
   }
