@@ -8,7 +8,7 @@ class IntegerPaginationController extends _$IntegerPaginationController
     with PagedContentControllerMixin<int> {
   @override
   PagedContent<int> build() {
-    return doBuild();
+    return doBuild(ref);
   }
 
   @override

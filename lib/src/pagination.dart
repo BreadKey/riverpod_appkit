@@ -14,7 +14,9 @@ class PagedContent<T> with _$PagedContent<T> {
       Object? error}) = _PagedContent;
 }
 
-mixin PagedContentControllerMixin<T> on AutoDisposeNotifier<PagedContent<T>> {
+mixin PagedContentControllerMixin<T> {
+  PagedContent<T> get state;
+  set state(PagedContent<T> value);
   /// Initializes the paged content state and triggers initial data loading.
   ///
   /// This is called by [build] in classes mixing in [PagedContentControllerMixin].
@@ -24,14 +26,14 @@ mixin PagedContentControllerMixin<T> on AutoDisposeNotifier<PagedContent<T>> {
   /// - Returns the initial state
   ///
   /// The returned state will be used as the initial value before any data is loaded.
-  PagedContent<T> doBuild() {
+  PagedContent<T> doBuild(Ref ref) {
     state = const PagedContent();
-    init();
+    init(ref);
     return state;
   }
 
   /// Initializes the paged content state and triggers initial data loading.
-  Future init() async {
+  Future init(Ref ref) async {
     final link = ref.keepAlive();
     await loadMore();
     link.close();
