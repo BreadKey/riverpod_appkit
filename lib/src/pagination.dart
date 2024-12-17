@@ -15,18 +15,29 @@ class PagedContent<T> with _$PagedContent<T> {
 }
 
 mixin PagedContentControllerMixin<T> on AutoDisposeNotifier<PagedContent<T>> {
+  /// Initializes the paged content state and triggers initial data loading.
+  ///
+  /// This is called by [build] in classes mixing in [PagedContentControllerMixin].
+  /// It:
+  /// - Sets the initial empty state
+  /// - Triggers [init] to load the first page of data
+  /// - Returns the initial state
+  ///
+  /// The returned state will be used as the initial value before any data is loaded.
   PagedContent<T> doBuild() {
     state = const PagedContent();
     init();
     return state;
   }
 
+  /// Initializes the paged content state and triggers initial data loading.
   Future init() async {
     final link = ref.keepAlive();
     await loadMore();
     link.close();
   }
 
+  /// Loads the next page of content.
   Future loadMore() async {
     if (state.isEnd || state.onLoad) return;
 
