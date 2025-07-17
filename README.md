@@ -4,7 +4,7 @@ A collection of utilities and helpers for Flutter applications using Riverpod.
 
 ## Features
 
-### Initialization### 초기화### Initialization### 초기화
+### Initialization
 ```pubspec.yaml```
 ```yaml
 dependencies:
