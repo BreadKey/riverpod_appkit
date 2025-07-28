@@ -21,6 +21,7 @@ mixin _$PagedContent<T> {
   List<T> get contents => throw _privateConstructorUsedError;
   bool get hasError => throw _privateConstructorUsedError;
   Object? get error => throw _privateConstructorUsedError;
+  StackTrace? get stackTrace => throw _privateConstructorUsedError;
 
   /// Create a copy of PagedContent
   /// with the given fields replaced by the non-null parameter values.
@@ -40,7 +41,8 @@ abstract class $PagedContentCopyWith<T, $Res> {
       bool isEnd,
       List<T> contents,
       bool hasError,
-      Object? error});
+      Object? error,
+      StackTrace? stackTrace});
 }
 
 /// @nodoc
@@ -63,6 +65,7 @@ class _$PagedContentCopyWithImpl<T, $Res, $Val extends PagedContent<T>>
     Object? contents = null,
     Object? hasError = null,
     Object? error = freezed,
+    Object? stackTrace = freezed,
   }) {
     return _then(_value.copyWith(
       onLoad: null == onLoad
@@ -82,6 +85,10 @@ class _$PagedContentCopyWithImpl<T, $Res, $Val extends PagedContent<T>>
           : hasError // ignore: cast_nullable_to_non_nullable
               as bool,
       error: freezed == error ? _value.error : error,
+      stackTrace: freezed == stackTrace
+          ? _value.stackTrace
+          : stackTrace // ignore: cast_nullable_to_non_nullable
+              as StackTrace?,
     ) as $Val);
   }
 }
@@ -99,7 +106,8 @@ abstract class _$$PagedContentImplCopyWith<T, $Res>
       bool isEnd,
       List<T> contents,
       bool hasError,
-      Object? error});
+      Object? error,
+      StackTrace? stackTrace});
 }
 
 /// @nodoc
@@ -120,6 +128,7 @@ class __$$PagedContentImplCopyWithImpl<T, $Res>
     Object? contents = null,
     Object? hasError = null,
     Object? error = freezed,
+    Object? stackTrace = freezed,
   }) {
     return _then(_$PagedContentImpl<T>(
       onLoad: null == onLoad
@@ -139,6 +148,10 @@ class __$$PagedContentImplCopyWithImpl<T, $Res>
           : hasError // ignore: cast_nullable_to_non_nullable
               as bool,
       error: freezed == error ? _value.error : error,
+      stackTrace: freezed == stackTrace
+          ? _value.stackTrace
+          : stackTrace // ignore: cast_nullable_to_non_nullable
+              as StackTrace?,
     ));
   }
 }
@@ -151,7 +164,8 @@ class _$PagedContentImpl<T> implements _PagedContent<T> {
       this.isEnd = false,
       final List<T> contents = const [],
       this.hasError = false,
-      this.error})
+      this.error,
+      this.stackTrace})
       : _contents = contents;
 
   @override
@@ -174,10 +188,12 @@ class _$PagedContentImpl<T> implements _PagedContent<T> {
   final bool hasError;
   @override
   final Object? error;
+  @override
+  final StackTrace? stackTrace;
 
   @override
   String toString() {
-    return 'PagedContent<$T>(onLoad: $onLoad, isEnd: $isEnd, contents: $contents, hasError: $hasError, error: $error)';
+    return 'PagedContent<$T>(onLoad: $onLoad, isEnd: $isEnd, contents: $contents, hasError: $hasError, error: $error, stackTrace: $stackTrace)';
   }
 
   @override
@@ -190,7 +206,9 @@ class _$PagedContentImpl<T> implements _PagedContent<T> {
             const DeepCollectionEquality().equals(other._contents, _contents) &&
             (identical(other.hasError, hasError) ||
                 other.hasError == hasError) &&
-            const DeepCollectionEquality().equals(other.error, error));
+            const DeepCollectionEquality().equals(other.error, error) &&
+            (identical(other.stackTrace, stackTrace) ||
+                other.stackTrace == stackTrace));
   }
 
   @override
@@ -200,7 +218,8 @@ class _$PagedContentImpl<T> implements _PagedContent<T> {
       isEnd,
       const DeepCollectionEquality().hash(_contents),
       hasError,
-      const DeepCollectionEquality().hash(error));
+      const DeepCollectionEquality().hash(error),
+      stackTrace);
 
   /// Create a copy of PagedContent
   /// with the given fields replaced by the non-null parameter values.
@@ -218,7 +237,8 @@ abstract class _PagedContent<T> implements PagedContent<T> {
       final bool isEnd,
       final List<T> contents,
       final bool hasError,
-      final Object? error}) = _$PagedContentImpl<T>;
+      final Object? error,
+      final StackTrace? stackTrace}) = _$PagedContentImpl<T>;
 
   @override
   bool get onLoad;
@@ -230,6 +250,8 @@ abstract class _PagedContent<T> implements PagedContent<T> {
   bool get hasError;
   @override
   Object? get error;
+  @override
+  StackTrace? get stackTrace;
 
   /// Create a copy of PagedContent
   /// with the given fields replaced by the non-null parameter values.

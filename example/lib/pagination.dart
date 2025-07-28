@@ -22,3 +22,23 @@ class IntegerPaginationController extends _$IntegerPaginationController
     return List.generate(10, (index) => lastContent + index + 1);
   }
 }
+
+@riverpod
+class PageWithParameterController extends _$PageWithParameterController
+    with PagedContentControllerMixin<int> {
+  @override
+  PagedContent<int> build({required int start}) {
+    return doBuild(ref);
+  }
+
+  @override 
+  Future<List<int>> loadNextContents(int? lastContent) async {
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (lastContent == null) {
+      return List.generate(10, (index) => start + index);
+    }
+
+    return List.generate(10, (index) => lastContent + index + 1);
+  }
+}

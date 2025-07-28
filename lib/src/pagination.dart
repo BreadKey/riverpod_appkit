@@ -11,7 +11,8 @@ class PagedContent<T> with _$PagedContent<T> {
       @Default(false) bool isEnd,
       @Default([]) List<T> contents,
       @Default(false) bool hasError,
-      Object? error}) = _PagedContent;
+      Object? error,
+      StackTrace? stackTrace}) = _PagedContent;
 }
 
 mixin PagedContentControllerMixin<T> {
@@ -51,8 +52,8 @@ mixin PagedContentControllerMixin<T> {
       state = state.copyWith(
           isEnd: newContents.isEmpty,
           contents: [...state.contents, ...newContents]);
-    } catch (e) {
-      state = state.copyWith(hasError: true, error: e);
+    } catch (e, s) {
+      state = state.copyWith(hasError: true, error: e, stackTrace: s);
     } finally {
       state = state.copyWith(onLoad: false);
     }
@@ -104,7 +105,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
     final pagedContent = ref.watch(getProvider(context, ref));
 
     if (pagedContent.hasError) {
-      return buildError(context, ref, pagedContent.error);
+      return buildError(
+          context, ref, pagedContent.error, pagedContent.stackTrace);
     }
 
     final contents = getContents(context, ref, pagedContent);
@@ -152,7 +154,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
 
   Widget buildLoading(BuildContext context, WidgetRef ref, bool isListItem);
   Widget buildEmpty(BuildContext context, WidgetRef ref);
-  Widget buildError(BuildContext context, WidgetRef ref, Object? error);
+  Widget buildError(BuildContext context, WidgetRef ref, Object? error,
+      StackTrace? stackTrace);
 
   void _loadMore(BuildContext context, WidgetRef ref) {
     WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -101,7 +101,8 @@ class IntegerList extends PagedContentList<int> {
       const Center(child: Text('No data'));
 
   @override
-  Widget buildError(BuildContext context, WidgetRef ref, Object? error) =>
+  Widget buildError(BuildContext context, WidgetRef ref, Object? error,
+          StackTrace? stackTrace) =>
       const Center(child: Text('Error'));
 
   @override
