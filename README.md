@@ -5,6 +5,15 @@ A collection of utilities and helpers for Flutter applications using Riverpod.
 ## Features
 
 ### Initialization
+```pubspec.yaml```
+```yaml
+dependencies:
+  ...
+  riverpod_appkit:
+    git:
+      url: git@github.com:BreadKey/riverpod_appkit.git
+      ref: main
+```
 
 The package provides a command-line tool to initialize your project with Riverpod AppKit.
 
