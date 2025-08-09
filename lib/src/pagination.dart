@@ -159,7 +159,9 @@ abstract class PagedContentList<T> extends ConsumerWidget {
 
   void _loadMore(BuildContext context, WidgetRef ref) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      loadMore(context, ref);
+      if (context.mounted) {
+        loadMore(context, ref);
+      }
     });
   }
 
