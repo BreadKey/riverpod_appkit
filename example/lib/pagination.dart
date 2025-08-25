@@ -13,13 +13,14 @@ class IntegerPaginationController extends _$IntegerPaginationController
 
   @override
   Future<List<int>> loadNextContents(int? lastContent) async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 2));
 
     if (lastContent == null) {
-      return List.generate(10, (index) => index);
+      return List.generate(3, (index) => index);
     }
 
-    return List.generate(10, (index) => lastContent + index + 1);
+
+    return List.generate(3, (index) => lastContent + index + 1);
   }
 }
 
@@ -31,7 +32,7 @@ class PageWithParameterController extends _$PageWithParameterController
     return doBuild(ref);
   }
 
-  @override 
+  @override
   Future<List<int>> loadNextContents(int? lastContent) async {
     await Future.delayed(const Duration(seconds: 1));
 

@@ -121,30 +121,37 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       }
     }
 
-    return ListView.builder(
+    return CustomScrollView(
       controller: scrollController,
       reverse: reverse,
       shrinkWrap: shrinkWrap,
-      padding: padding,
-      itemCount: contents.length + (canLoad ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (canLoad && index == contents.length) {
-          return buildLoading(context, ref, true);
-        }
-
-        final content = contents[index];
-        final isLast = index == contents.length - 1;
-        final T? previousContent = index > 0 ? contents[index - 1] : null;
-        final T? nextContent =
-            index < contents.length - 1 ? contents[index + 1] : null;
-
-        if (isLast) {
-          _loadMore(context, ref);
-        }
-
-        return buildContent(
-            context, ref, content, isLast, previousContent, nextContent);
-      },
+      slivers: [
+        SliverPadding(
+          padding: padding ?? EdgeInsets.zero,
+          sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+            childCount: contents.length + (canLoad ? 1 : 0),
+            (context, index) {
+              if (canLoad && index == contents.length) {
+                return buildLoading(context, ref, true);
+              }
+          
+              final content = contents[index];
+              final isLast = index == contents.length - 1;
+              final T? previousContent = index > 0 ? contents[index - 1] : null;
+              final T? nextContent =
+                  index < contents.length - 1 ? contents[index + 1] : null;
+          
+              if (isLast) {
+                _loadMore(context, ref);
+              }
+          
+              return buildContent(
+                  context, ref, content, isLast, previousContent, nextContent);
+            },
+          )),
+        )
+      ],
     );
   }
 

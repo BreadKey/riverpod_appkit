@@ -77,14 +77,18 @@ class _MyHomePageState extends State<MyHomePage> {
           // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
         ),
-        body:
-            const IntegerList() // This trailing comma makes auto-formatting nicer for build methods.
+        body: const Align(
+            alignment: Alignment.topCenter,
+            child:
+                IntegerList()) // This trailing comma makes auto-formatting nicer for build methods.
         );
   }
 }
 
 class IntegerList extends PagedContentList<int> {
-  const IntegerList({super.key});
+  const IntegerList({super.key})
+      : super(
+            reverse: true, shrinkWrap: true, padding: const EdgeInsets.all(20));
 
   @override
   Widget buildContent(BuildContext context, WidgetRef ref, int content,
