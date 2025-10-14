@@ -121,6 +121,7 @@ class IntegerList extends PagedContentList<int> {
           : const Center(child: Text('Loading...'));
 
   @override
-  PagedContentProvider<int> getProvider(BuildContext context, WidgetRef ref) =>
+  PagedContentProvider<PagedContentNotifier<int>, int> getProvider(
+          BuildContext context, WidgetRef ref) =>
       pageWithParameterControllerProvider(10);
 }

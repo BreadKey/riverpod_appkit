@@ -1,8 +1,8 @@
 import 'package:riverpod_appkit/riverpod_appkit.dart';
 
 final integerPaginationControllerProvider =
-    PagedContentProviderFactory.create<int>(
-        () => IntegerPaginationController());
+    PagedContentProviderFactory.create<IntegerPaginationController, int>(
+        IntegerPaginationController.new);
 
 class IntegerPaginationController extends PagedContentNotifier<int> {
   @override
@@ -18,8 +18,8 @@ class IntegerPaginationController extends PagedContentNotifier<int> {
 }
 
 final pageWithParameterControllerProvider =
-    PagedContentProviderFactory.family<int, int>(
-        (start) => PageWithParameterController(start: start));
+    PagedContentProviderFactory.family<PageWithParameterController, int, int>(
+        (int start) => PageWithParameterController(start: start));
 
 class PageWithParameterController extends PagedContentNotifier<int> {
   final int start;

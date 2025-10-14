@@ -63,21 +63,37 @@ abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
   Future<List<T>> loadNextContents(T? lastContent);
 }
 
-typedef PagedContentProvider<T>
-    = NotifierProvider<PagedContentNotifier<T>, PagedContent<T>>;
-typedef PagedContentProviderFamily<T, ArgT> = NotifierProviderFamily<
-    PagedContentNotifier<T>, PagedContent<T>, ArgT>;
+typedef PagedContentProvider<NotifierT extends PagedContentNotifier<T>, T>
+    = NotifierProvider<NotifierT, PagedContent<T>>;
+typedef PagedContentProviderFamily<NotifierT extends PagedContentNotifier<T>, T,
+        ArgT>
+    = NotifierProviderFamily<NotifierT, PagedContent<T>, ArgT>;
 
 abstract class PagedContentProviderFactory {
-  static PagedContentProvider<T> create<T>(
-          PagedContentNotifier<T> Function() create) =>
-      NotifierProvider.autoDispose<PagedContentNotifier<T>,
-          PagedContent<T>>(() => create());
+  static const create = _PagedContentBuilder();
+  static const family = _PagedContentFamilyBuilder();
+}
 
-  static PagedContentProviderFamily<T, ArgT> family<T, ArgT>(
-          PagedContentNotifier<T> Function(ArgT arg) create) =>
-      NotifierProvider.autoDispose
-          .family<PagedContentNotifier<T>, PagedContent<T>, ArgT>(create);
+class _PagedContentBuilder {
+  const _PagedContentBuilder();
+
+  PagedContentProvider<NotifierT, T>
+      call<NotifierT extends PagedContentNotifier<T>, T>(
+          NotifierT Function() create) {
+    return NotifierProvider.autoDispose<NotifierT, PagedContent<T>>(
+        () => create());
+  }
+}
+
+class _PagedContentFamilyBuilder {
+  const _PagedContentFamilyBuilder();
+
+  PagedContentProviderFamily<NotifierT, T, ArgT>
+      call<NotifierT extends PagedContentNotifier<T>, T, ArgT>(
+          NotifierT Function(ArgT arg) create) {
+    return NotifierProvider.autoDispose
+        .family<NotifierT, PagedContent<T>, ArgT>(create);
+  }
 }
 
 @freezed
@@ -96,7 +112,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
   final bool reverse;
   final bool shrinkWrap;
   final EdgeInsets? padding;
-  PagedContentProvider<T> getProvider(BuildContext context, WidgetRef ref);
+  PagedContentProvider<PagedContentNotifier<T>, T> getProvider(
+      BuildContext context, WidgetRef ref);
 
   const PagedContentList(
       {super.key,
