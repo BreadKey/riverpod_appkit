@@ -24,6 +24,8 @@ abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
   Future loadMore() async {
     if (state.isEnd || state.onLoad) return;
 
+    final link = ref.keepAlive();
+
     state = state.copyWith(onLoad: true, hasError: false, error: null);
     try {
       final newContents = await loadNextContents(state.contents.lastOrNull);
@@ -35,6 +37,7 @@ abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
       state = state.copyWith(hasError: true, error: e, stackTrace: s);
     } finally {
       state = state.copyWith(onLoad: false);
+      link.close();
     }
   }
 
