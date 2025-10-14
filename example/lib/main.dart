@@ -121,12 +121,6 @@ class IntegerList extends PagedContentList<int> {
           : const Center(child: Text('Loading...'));
 
   @override
-  Refreshable<PagedContent<int>> getProvider(
-          BuildContext context, WidgetRef ref) =>
-      integerPaginationControllerProvider;
-
-  @override
-  void loadMore(BuildContext context, WidgetRef ref) {
-    ref.read(integerPaginationControllerProvider.notifier).loadMore();
-  }
+  PagedContentProvider<int> getProvider(BuildContext context, WidgetRef ref) =>
+      pageWithParameterControllerProvider(10);
 }
