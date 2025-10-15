@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_appkit_repository/riverpod_appkit_repository.dart';
 
+export 'package:riverpod_appkit_repository/riverpod_appkit_repository.dart';
+
 abstract class FirestorePagingRepository<T> implements PagingRepository<T> {
   final FirebaseFirestore firestore;
   final String orderBy;
