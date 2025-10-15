@@ -9,6 +9,7 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  cloud_firestore: ^6.0.3
   flutter:
     sdk: flutter
   riverpod_appkit:
