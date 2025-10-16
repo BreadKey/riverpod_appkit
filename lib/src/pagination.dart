@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -115,6 +116,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
   final bool reverse;
   final bool shrinkWrap;
   final EdgeInsets? padding;
+  final Axis scrollDirection;
+
   PagedContentProvider<PagedContentNotifier<T>, T> getProvider(
       BuildContext context, WidgetRef ref);
 
@@ -123,7 +126,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       this.scrollController,
       this.reverse = false,
       this.shrinkWrap = false,
-      this.padding});
+      this.padding,
+      this.scrollDirection = Axis.vertical});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -152,6 +156,7 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       controller: scrollController,
       reverse: reverse,
       shrinkWrap: shrinkWrap,
+      scrollDirection: scrollDirection,
       slivers: [
         SliverPadding(
           padding: padding ?? EdgeInsets.zero,
