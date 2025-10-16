@@ -5,10 +5,6 @@ abstract interface class PagingRepository<T> {
   Future<List<T>> load(int count, {String? afterId});
 }
 
-abstract interface class PagingModel {
-  String? get id;
-}
-
 abstract class PagedContentController<T extends PagingModel>
     extends PagedContentNotifier<T> {
   final bool needToListenNewContents;

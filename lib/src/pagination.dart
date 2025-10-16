@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'pagination.freezed.dart';
+
+abstract interface class PagingModel {
+  String? get id;
+}
 
 abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
   @override
