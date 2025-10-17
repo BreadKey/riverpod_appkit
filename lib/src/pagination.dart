@@ -9,6 +9,17 @@ abstract interface class PagingModel {
   String? get id;
 }
 
+@freezed
+class PagedContent<T> with _$PagedContent<T> {
+  const factory PagedContent(
+      {@Default(false) bool onLoad,
+      @Default(false) bool isEnd,
+      @Default([]) List<T> contents,
+      @Default(false) bool hasError,
+      Object? error,
+      StackTrace? stackTrace}) = _PagedContent;
+}
+
 abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
   @override
   PagedContent<T> build() {
@@ -103,23 +114,13 @@ class _PagedContentFamilyBuilder {
   }
 }
 
-@freezed
-class PagedContent<T> with _$PagedContent<T> {
-  const factory PagedContent(
-      {@Default(false) bool onLoad,
-      @Default(false) bool isEnd,
-      @Default([]) List<T> contents,
-      @Default(false) bool hasError,
-      Object? error,
-      StackTrace? stackTrace}) = _PagedContent;
-}
-
 abstract class PagedContentList<T> extends ConsumerWidget {
   final ScrollController? scrollController;
   final bool reverse;
   final bool shrinkWrap;
   final EdgeInsets? padding;
   final Axis scrollDirection;
+  final Widget? header;
 
   PagedContentProvider<PagedContentNotifier<T>, T> getProvider(
       BuildContext context, WidgetRef ref);
@@ -130,7 +131,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       this.reverse = false,
       this.shrinkWrap = false,
       this.padding,
-      this.scrollDirection = Axis.vertical});
+      this.scrollDirection = Axis.vertical,
+      this.header});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -146,13 +148,22 @@ abstract class PagedContentList<T> extends ConsumerWidget {
     final contents = getContents(context, ref, pagedContent);
 
     if (contents.isEmpty) {
+      final Widget child;
       if (canLoad) {
         _loadMore(context, ref);
 
-        return buildLoading(context, ref, false);
+        child = buildLoading(context, ref, false);
       } else {
-        return buildEmpty(context, ref);
+        child = buildEmpty(context, ref);
       }
+
+      return Flex(
+        direction: scrollDirection,
+        children: [
+          if (header != null) header!,
+          Expanded(child: child),
+        ],
+      );
     }
 
     return CustomScrollView(
@@ -165,17 +176,25 @@ abstract class PagedContentList<T> extends ConsumerWidget {
           padding: padding ?? EdgeInsets.zero,
           sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-            childCount: contents.length + (canLoad ? 1 : 0),
+            childCount:
+                contents.length + (canLoad ? 1 : 0) + (header != null ? 1 : 0),
             (context, index) {
-              if (canLoad && index == contents.length) {
+              if (header != null && index == 0) {
+                return header!;
+              }
+
+              final itemIndex = index - (header != null ? 1 : 0);
+              if (canLoad && itemIndex == contents.length) {
                 return buildLoading(context, ref, true);
               }
 
-              final content = contents[index];
-              final isLast = index == contents.length - 1;
-              final T? previousContent = index > 0 ? contents[index - 1] : null;
-              final T? nextContent =
-                  index < contents.length - 1 ? contents[index + 1] : null;
+              final content = contents[itemIndex];
+              final isLast = itemIndex == contents.length - 1;
+              final T? previousContent =
+                  itemIndex > 0 ? contents[itemIndex - 1] : null;
+              final T? nextContent = itemIndex < contents.length - 1
+                  ? contents[itemIndex + 1]
+                  : null;
 
               if (isLast) {
                 _loadMore(context, ref);
