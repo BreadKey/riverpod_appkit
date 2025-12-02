@@ -30,9 +30,7 @@ abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
 
   /// Initializes the paged content state and triggers initial data loading.
   Future init() async {
-    final link = ref.keepAlive();
     await loadMore();
-    link.close();
   }
 
   /// Loads the next page of content.
