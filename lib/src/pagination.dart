@@ -121,6 +121,7 @@ abstract class PagedContentList<T> extends ConsumerWidget {
   final EdgeInsets? padding;
   final Axis scrollDirection;
   final Widget? header;
+  final ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior;
 
   PagedContentProvider<PagedContentNotifier<T>, T> getProvider(
       BuildContext context, WidgetRef ref);
@@ -132,7 +133,8 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       this.shrinkWrap = false,
       this.padding,
       this.scrollDirection = Axis.vertical,
-      this.header});
+      this.header,
+      this.keyboardDismissBehavior});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -171,6 +173,7 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       reverse: reverse,
       shrinkWrap: shrinkWrap,
       scrollDirection: scrollDirection,
+      keyboardDismissBehavior: keyboardDismissBehavior,
       slivers: [
         SliverPadding(
           padding: padding ?? EdgeInsets.zero,
