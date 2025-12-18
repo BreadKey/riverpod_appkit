@@ -159,13 +159,26 @@ abstract class PagedContentList<T> extends ConsumerWidget {
         child = buildEmpty(context, ref);
       }
 
-      return Flex(
-        direction: scrollDirection,
-        children: [
-          if (header != null) header!,
-          if (expandEmpty) Expanded(child: child) else child,
-        ],
-      );
+      if (expandEmpty) {
+        return Flex(
+          direction: scrollDirection,
+          children: [
+            if (header != null) header!,
+            Expanded(child: child),
+          ],
+        );
+      } else {
+        return SingleChildScrollView(
+          scrollDirection: scrollDirection,
+          child: Flex(
+            direction: scrollDirection,
+            children: [
+              if (header != null) header!,
+              child,
+            ],
+          ),
+        );
+      }
     }
 
     return CustomScrollView(
