@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'pagination.freezed.dart';
+
+abstract interface class PagingModel {
+  String? get id;
+}
 
 @freezed
 class PagedContent<T> with _$PagedContent<T> {
@@ -15,35 +20,24 @@ class PagedContent<T> with _$PagedContent<T> {
       StackTrace? stackTrace}) = _PagedContent;
 }
 
-mixin PagedContentControllerMixin<T> {
-  PagedContent<T> get state;
-  set state(PagedContent<T> value);
-
-  /// Initializes the paged content state and triggers initial data loading.
-  ///
-  /// This is called by [build] in classes mixing in [PagedContentControllerMixin].
-  /// It:
-  /// - Sets the initial empty state
-  /// - Triggers [init] to load the first page of data
-  /// - Returns the initial state
-  ///
-  /// The returned state will be used as the initial value before any data is loaded.
-  PagedContent<T> doBuild(Ref ref) {
+abstract class PagedContentNotifier<T> extends Notifier<PagedContent<T>> {
+  @override
+  PagedContent<T> build() {
     state = PagedContent<T>();
-    init(ref);
+    init();
     return state;
   }
 
   /// Initializes the paged content state and triggers initial data loading.
-  Future init(Ref ref) async {
-    final link = ref.keepAlive();
+  Future init() async {
     await loadMore();
-    link.close();
   }
 
   /// Loads the next page of content.
   Future loadMore() async {
     if (state.isEnd || state.onLoad) return;
+
+    final link = ref.keepAlive();
 
     state = state.copyWith(onLoad: true, hasError: false, error: null);
     try {
@@ -56,6 +50,7 @@ mixin PagedContentControllerMixin<T> {
       state = state.copyWith(hasError: true, error: e, stackTrace: s);
     } finally {
       state = state.copyWith(onLoad: false);
+      link.close();
     }
   }
 
@@ -64,7 +59,7 @@ mixin PagedContentControllerMixin<T> {
   /// [lastContent] is the last item in the current list of contents, or null if this is the first page.
   /// Returns a [Future] that completes with a list of new items to append.
   ///
-  /// This method should be implemented by classes mixing in [PagedContentControllerMixin].
+  /// This method should be implemented by classes mixing in [PagedContentNotifierMixin].
   /// It will be called automatically by the mixin to load more content when needed.
   ///
   /// The implementation should:
@@ -84,19 +79,62 @@ mixin PagedContentControllerMixin<T> {
   Future<List<T>> loadNextContents(T? lastContent);
 }
 
+typedef PagedContentProvider<NotifierT extends PagedContentNotifier<T>, T>
+    = NotifierProvider<NotifierT, PagedContent<T>>;
+typedef PagedContentProviderFamily<NotifierT extends PagedContentNotifier<T>, T,
+        ArgT>
+    = NotifierProviderFamily<NotifierT, PagedContent<T>, ArgT>;
+
+abstract class PagedContentProviderFactory {
+  static const create = _PagedContentBuilder();
+  static const family = _PagedContentFamilyBuilder();
+}
+
+class _PagedContentBuilder {
+  const _PagedContentBuilder();
+
+  PagedContentProvider<NotifierT, T>
+      call<NotifierT extends PagedContentNotifier<T>, T>(
+          NotifierT Function() create) {
+    return NotifierProvider.autoDispose<NotifierT, PagedContent<T>>(
+        () => create());
+  }
+}
+
+class _PagedContentFamilyBuilder {
+  const _PagedContentFamilyBuilder();
+
+  PagedContentProviderFamily<NotifierT, T, ArgT>
+      call<NotifierT extends PagedContentNotifier<T>, T, ArgT>(
+          NotifierT Function(ArgT arg) create) {
+    return NotifierProvider.autoDispose
+        .family<NotifierT, PagedContent<T>, ArgT>(create);
+  }
+}
+
 abstract class PagedContentList<T> extends ConsumerWidget {
   final ScrollController? scrollController;
   final bool reverse;
   final bool shrinkWrap;
   final EdgeInsets? padding;
-  Refreshable<PagedContent<T>> getProvider(BuildContext context, WidgetRef ref);
+  final Axis scrollDirection;
+  final Widget? header;
+  final ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior;
+  final bool expandEmpty;
+
+  PagedContentProvider<PagedContentNotifier<T>, T> getProvider(
+      BuildContext context, WidgetRef ref);
 
   const PagedContentList(
       {super.key,
       this.scrollController,
       this.reverse = false,
       this.shrinkWrap = false,
-      this.padding});
+      this.padding,
+      this.scrollDirection = Axis.vertical,
+      this.header,
+      this.keyboardDismissBehavior,
+      this.expandEmpty = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -112,12 +150,34 @@ abstract class PagedContentList<T> extends ConsumerWidget {
     final contents = getContents(context, ref, pagedContent);
 
     if (contents.isEmpty) {
+      final Widget child;
       if (canLoad) {
         _loadMore(context, ref);
 
-        return buildLoading(context, ref, false);
+        child = buildLoading(context, ref, false);
       } else {
-        return buildEmpty(context, ref);
+        child = buildEmpty(context, ref);
+      }
+
+      if (expandEmpty) {
+        return Flex(
+          direction: scrollDirection,
+          children: [
+            if (header != null) header!,
+            Expanded(child: child),
+          ],
+        );
+      } else {
+        return SingleChildScrollView(
+          scrollDirection: scrollDirection,
+          child: Flex(
+            direction: scrollDirection,
+            children: [
+              if (header != null) header!,
+              child,
+            ],
+          ),
+        );
       }
     }
 
@@ -125,27 +185,37 @@ abstract class PagedContentList<T> extends ConsumerWidget {
       controller: scrollController,
       reverse: reverse,
       shrinkWrap: shrinkWrap,
+      scrollDirection: scrollDirection,
+      keyboardDismissBehavior: keyboardDismissBehavior,
       slivers: [
         SliverPadding(
           padding: padding ?? EdgeInsets.zero,
           sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-            childCount: contents.length + (canLoad ? 1 : 0),
+            childCount:
+                contents.length + (canLoad ? 1 : 0) + (header != null ? 1 : 0),
             (context, index) {
-              if (canLoad && index == contents.length) {
+              if (header != null && index == 0) {
+                return header!;
+              }
+
+              final itemIndex = index - (header != null ? 1 : 0);
+              if (canLoad && itemIndex == contents.length) {
                 return buildLoading(context, ref, true);
               }
-          
-              final content = contents[index];
-              final isLast = index == contents.length - 1;
-              final T? previousContent = index > 0 ? contents[index - 1] : null;
-              final T? nextContent =
-                  index < contents.length - 1 ? contents[index + 1] : null;
-          
+
+              final content = contents[itemIndex];
+              final isLast = itemIndex == contents.length - 1;
+              final T? previousContent =
+                  itemIndex > 0 ? contents[itemIndex - 1] : null;
+              final T? nextContent = itemIndex < contents.length - 1
+                  ? contents[itemIndex + 1]
+                  : null;
+
               if (isLast) {
                 _loadMore(context, ref);
               }
-          
+
               return buildContent(
                   context, ref, content, isLast, previousContent, nextContent);
             },
@@ -167,12 +237,10 @@ abstract class PagedContentList<T> extends ConsumerWidget {
   void _loadMore(BuildContext context, WidgetRef ref) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) {
-        loadMore(context, ref);
+        ref.read(getProvider(context, ref).notifier).loadMore();
       }
     });
   }
-
-  void loadMore(BuildContext context, WidgetRef ref);
 
   Widget buildContent(BuildContext context, WidgetRef ref, T content,
       bool isLast, T? previousContent, T? nextContent);

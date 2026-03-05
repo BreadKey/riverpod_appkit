@@ -1,28 +1,31 @@
-name: riverpod_appkit
+name: riverpod_appkit_firestore
+publish_to: none
 description: "A new Flutter package project."
 version: 0.0.1
 homepage:
 
 environment:
-  sdk: ^3.5.4
+  sdk: ^3.9.2
   flutter: ">=1.17.0"
 
 dependencies:
+  cloud_firestore: ^6.0.3
   flutter:
     sdk: flutter
-  flutter_riverpod: ^3.2.1
-  freezed_annotation: ^3.1.0
-  riverpod_annotation: ^4.0.2
-  yaml_edit: ^2.2.1
-
+  riverpod_appkit:
+    git:
+      url: git@github.com:BreadKey/riverpod_appkit.git
+      ref: riverpod3
+  riverpod_appkit_repository:
+    git:
+      url: git@github.com:BreadKey/riverpod_appkit.git
+      ref: riverpod3
+      path: repository
+      
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  riverpod_generator: ^4.0.3
-  freezed: ^3.2.5
-  build_runner: ^2.11.1
-  json_serializable: ^6.12.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -1,16 +1,10 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod_appkit/riverpod_appkit.dart';
 
-part 'pagination.g.dart';
+final integerPaginationControllerProvider =
+    PagedContentProviderFactory.create<IntegerPaginationController, int>(
+        IntegerPaginationController.new);
 
-@riverpod
-class IntegerPaginationController extends _$IntegerPaginationController
-    with PagedContentControllerMixin<int> {
-  @override
-  PagedContent<int> build() {
-    return doBuild(ref);
-  }
-
+class IntegerPaginationController extends PagedContentNotifier<int> {
   @override
   Future<List<int>> loadNextContents(int? lastContent) async {
     await Future.delayed(const Duration(seconds: 2));
@@ -19,18 +13,18 @@ class IntegerPaginationController extends _$IntegerPaginationController
       return List.generate(3, (index) => index);
     }
 
-
     return List.generate(3, (index) => lastContent + index + 1);
   }
 }
 
-@riverpod
-class PageWithParameterController extends _$PageWithParameterController
-    with PagedContentControllerMixin<int> {
-  @override
-  PagedContent<int> build({required int start}) {
-    return doBuild(ref);
-  }
+final pageWithParameterControllerProvider =
+    PagedContentProviderFactory.family<PageWithParameterController, int, int>(
+        (int start) => PageWithParameterController(start: start));
+
+class PageWithParameterController extends PagedContentNotifier<int> {
+  final int start;
+
+  PageWithParameterController({required this.start});
 
   @override
   Future<List<int>> loadNextContents(int? lastContent) async {
