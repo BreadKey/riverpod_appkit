@@ -59,6 +59,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  bool sliver = false;
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -76,20 +78,36 @@ class _MyHomePageState extends State<MyHomePage> {
           // Here we take the value from the MyHomePage object that was created by
           // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
+          actions: [
+            Switch(
+                value: sliver,
+                onChanged: (value) {
+                  setState(() {
+                    sliver = value;
+                  });
+                }),
+          ],
         ),
-        body: const Align(
-            alignment: Alignment.topCenter,
-            child:
-                IntegerList()) // This trailing comma makes auto-formatting nicer for build methods.
+        body: sliver
+            ? CustomScrollView(
+                reverse: true,
+                slivers: [const SliverIntegerList()],
+              )
+            : Align(
+                alignment: Alignment.topCenter,
+                child:
+                    const IntegerList()) // This trailing comma makes auto-formatting nicer for build methods.
         );
   }
 }
 
-class IntegerList extends PagedContentList<int> {
+class IntegerList extends PagedContentList<int> with IntegerListMixin {
   const IntegerList({super.key})
       : super(
             reverse: true, shrinkWrap: true, padding: const EdgeInsets.all(20));
+}
 
+mixin IntegerListMixin on IPagedContentList<int> {
   @override
   Widget buildContent(BuildContext context, WidgetRef ref, int content,
           bool isLast, int? previousContent, int? nextContent) =>
@@ -124,4 +142,10 @@ class IntegerList extends PagedContentList<int> {
   PagedContentProvider<PagedContentNotifier<int>, int> getProvider(
           BuildContext context, WidgetRef ref) =>
       pageWithParameterControllerProvider(10);
+}
+
+class SliverIntegerList extends SliverPagedContentList<int>
+    with IntegerListMixin {
+  const SliverIntegerList({super.key})
+      : super(padding: const EdgeInsets.all(20));
 }

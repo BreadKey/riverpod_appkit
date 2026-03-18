@@ -9,6 +9,25 @@ abstract interface class PagingModel {
   String? get id;
 }
 
+void _scheduleLoadMore(BuildContext context, Future<void> Function() loadMore) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (context.mounted) {
+      loadMore();
+    }
+  });
+}
+
+typedef PagedSliverLoadingBuilder = Widget Function(
+    BuildContext context, WidgetRef ref, bool isListItem);
+typedef PagedSliverContentBuilder<T> = Widget Function(
+  BuildContext context,
+  WidgetRef ref,
+  T content,
+  bool isLast,
+  T? previousContent,
+  T? nextContent,
+);
+
 @freezed
 class PagedContent<T> with _$PagedContent<T> {
   const factory PagedContent(
@@ -112,29 +131,31 @@ class _PagedContentFamilyBuilder {
   }
 }
 
-abstract class PagedContentList<T> extends ConsumerWidget {
-  final ScrollController? scrollController;
-  final bool reverse;
-  final bool shrinkWrap;
+abstract interface class IPagedContentList<T> extends ConsumerWidget {
+  const IPagedContentList({super.key, this.padding, this.header});
+
   final EdgeInsets? padding;
-  final Axis scrollDirection;
   final Widget? header;
-  final ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior;
-  final bool expandEmpty;
 
   PagedContentProvider<PagedContentNotifier<T>, T> getProvider(
       BuildContext context, WidgetRef ref);
 
-  const PagedContentList(
-      {super.key,
-      this.scrollController,
-      this.reverse = false,
-      this.shrinkWrap = false,
-      this.padding,
-      this.scrollDirection = Axis.vertical,
-      this.header,
-      this.keyboardDismissBehavior,
-      this.expandEmpty = true});
+  List<T> getContents(
+          BuildContext context, WidgetRef ref, PagedContent<T> pagedContent) =>
+      pagedContent.contents;
+
+  Widget buildLoading(BuildContext context, WidgetRef ref, bool isListItem);
+  Widget buildEmpty(BuildContext context, WidgetRef ref);
+  Widget buildError(BuildContext context, WidgetRef ref, Object? error,
+      StackTrace? stackTrace);
+
+  Widget buildContent(BuildContext context, WidgetRef ref, T content,
+      bool isLast, T? previousContent, T? nextContent);
+}
+
+abstract class _PagedContentListBase<T> extends IPagedContentList<T> {
+  const _PagedContentListBase(
+      {super.key, required super.padding, super.header});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -152,96 +173,130 @@ abstract class PagedContentList<T> extends ConsumerWidget {
     if (contents.isEmpty) {
       final Widget child;
       if (canLoad) {
-        _loadMore(context, ref);
+        _scheduleLoadMore(
+            context, ref.read(getProvider(context, ref).notifier).loadMore);
 
         child = buildLoading(context, ref, false);
       } else {
         child = buildEmpty(context, ref);
       }
 
-      if (expandEmpty) {
-        return Flex(
+      return _buildEmpty(context, ref, child);
+    }
+
+    final sliver = SliverPadding(
+      padding: padding ?? EdgeInsets.zero,
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (header != null && index == 0) {
+              return header!;
+            }
+
+            final itemIndex = index - (header != null ? 1 : 0);
+            if (canLoad && itemIndex == contents.length) {
+              return buildLoading(context, ref, true);
+            }
+
+            final content = contents[itemIndex];
+            final isLast = itemIndex == contents.length - 1;
+            final T? previousContent =
+                itemIndex > 0 ? contents[itemIndex - 1] : null;
+            final T? nextContent = itemIndex < contents.length - 1
+                ? contents[itemIndex + 1]
+                : null;
+
+            if (isLast) {
+              _scheduleLoadMore(context,
+                  ref.read(getProvider(context, ref).notifier).loadMore);
+            }
+
+            return buildContent(
+                context, ref, content, isLast, previousContent, nextContent);
+          },
+          childCount:
+              contents.length + (canLoad ? 1 : 0) + (header != null ? 1 : 0),
+        ),
+      ),
+    );
+
+    return _buildList(context, ref, sliver);
+  }
+
+  Widget _buildEmpty(BuildContext context, WidgetRef ref, Widget child);
+  Widget _buildList(BuildContext context, WidgetRef ref, Widget sliver);
+}
+
+abstract class PagedContentList<T> extends _PagedContentListBase<T> {
+  final ScrollController? scrollController;
+  final bool reverse;
+  final bool shrinkWrap;
+  final Axis scrollDirection;
+  final ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior;
+  final bool expandEmpty;
+
+  const PagedContentList(
+      {super.key,
+      this.scrollController,
+      this.reverse = false,
+      this.shrinkWrap = false,
+      super.padding,
+      this.scrollDirection = Axis.vertical,
+      super.header,
+      this.keyboardDismissBehavior,
+      this.expandEmpty = true});
+
+  @override
+  Widget _buildEmpty(BuildContext context, WidgetRef ref, Widget child) {
+    if (expandEmpty) {
+      return Flex(
+        direction: scrollDirection,
+        children: [
+          if (header != null) header!,
+          Expanded(child: child),
+        ],
+      );
+    } else {
+      return SingleChildScrollView(
+        scrollDirection: scrollDirection,
+        child: Flex(
           direction: scrollDirection,
           children: [
             if (header != null) header!,
-            Expanded(child: child),
+            child,
           ],
-        );
-      } else {
-        return SingleChildScrollView(
-          scrollDirection: scrollDirection,
-          child: Flex(
-            direction: scrollDirection,
-            children: [
-              if (header != null) header!,
-              child,
-            ],
-          ),
-        );
-      }
+        ),
+      );
     }
+  }
 
+  @override
+  Widget _buildList(BuildContext context, WidgetRef ref, Widget sliver) {
     return CustomScrollView(
       controller: scrollController,
       reverse: reverse,
       shrinkWrap: shrinkWrap,
       scrollDirection: scrollDirection,
       keyboardDismissBehavior: keyboardDismissBehavior,
-      slivers: [
-        SliverPadding(
-          padding: padding ?? EdgeInsets.zero,
-          sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-            childCount:
-                contents.length + (canLoad ? 1 : 0) + (header != null ? 1 : 0),
-            (context, index) {
-              if (header != null && index == 0) {
-                return header!;
-              }
-
-              final itemIndex = index - (header != null ? 1 : 0);
-              if (canLoad && itemIndex == contents.length) {
-                return buildLoading(context, ref, true);
-              }
-
-              final content = contents[itemIndex];
-              final isLast = itemIndex == contents.length - 1;
-              final T? previousContent =
-                  itemIndex > 0 ? contents[itemIndex - 1] : null;
-              final T? nextContent = itemIndex < contents.length - 1
-                  ? contents[itemIndex + 1]
-                  : null;
-
-              if (isLast) {
-                _loadMore(context, ref);
-              }
-
-              return buildContent(
-                  context, ref, content, isLast, previousContent, nextContent);
-            },
-          )),
-        )
-      ],
+      slivers: [sliver],
     );
   }
+}
 
-  List<T> getContents(
-          BuildContext context, WidgetRef ref, PagedContent<T> pagedContent) =>
-      pagedContent.contents;
+abstract class SliverPagedContentList<T> extends _PagedContentListBase<T> {
+  const SliverPagedContentList(
+      {super.key, required super.padding, super.header});
 
-  Widget buildLoading(BuildContext context, WidgetRef ref, bool isListItem);
-  Widget buildEmpty(BuildContext context, WidgetRef ref);
-  Widget buildError(BuildContext context, WidgetRef ref, Object? error,
-      StackTrace? stackTrace);
-
-  void _loadMore(BuildContext context, WidgetRef ref) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        ref.read(getProvider(context, ref).notifier).loadMore();
-      }
-    });
+  @override
+  Widget _buildList(BuildContext context, WidgetRef ref, Widget sliver) {
+    return sliver;
   }
 
-  Widget buildContent(BuildContext context, WidgetRef ref, T content,
-      bool isLast, T? previousContent, T? nextContent);
+  @override
+  Widget _buildEmpty(BuildContext context, WidgetRef ref, Widget child) {
+    return SliverPadding(
+      padding: padding ?? EdgeInsets.zero,
+      sliver: SliverToBoxAdapter(child: child),
+    );
+  }
 }
