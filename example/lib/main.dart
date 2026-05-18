@@ -101,22 +101,31 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class IntegerList extends PagedContentList<int> with IntegerListMixin {
+class IntegerList extends PagedContentGrid<int> with IntegerListMixin {
   const IntegerList({super.key})
       : super(
-            reverse: true, shrinkWrap: true, padding: const EdgeInsets.all(20));
+            reverse: true,
+            shrinkWrap: true,
+            padding: const EdgeInsets.all(20),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200.0,
+              mainAxisSpacing: 10.0,
+              crossAxisSpacing: 10.0,
+              childAspectRatio: 4.0,
+            ));
 }
 
 mixin IntegerListMixin on IPagedContentList<int> {
   @override
   Widget buildContent(BuildContext context, WidgetRef ref, int content,
-          bool isLast, int? previousContent, int? nextContent) =>
-      Card(
-        key: ValueKey(content),
-        child: ListTile(
-          title: Text('$content'),
-        ),
-      );
+      bool isLast, int? previousContent, int? nextContent) {
+    return Card(
+      key: ValueKey(content),
+      child: ListTile(
+        title: Text('$content'),
+      ),
+    );
+  }
 
   @override
   Widget buildEmpty(BuildContext context, WidgetRef ref) =>
@@ -144,8 +153,25 @@ mixin IntegerListMixin on IPagedContentList<int> {
       pageWithParameterControllerProvider(10);
 }
 
-class SliverIntegerList extends SliverPagedContentList<int>
+class SliverIntegerList extends SliverPagedContentGrid<int>
     with IntegerListMixin {
   const SliverIntegerList({super.key})
-      : super(padding: const EdgeInsets.all(20));
+      : super(
+            padding: const EdgeInsets.all(20),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200.0,
+              mainAxisSpacing: 10.0,
+              crossAxisSpacing: 10.0,
+              childAspectRatio: 4.0,
+            ));
+
+  bool filter(int content) {
+    return content % 5 == 0;
+  }
+
+  @override
+  List<int> getContents(
+      BuildContext context, WidgetRef ref, PagedContent<int> pagedContent) {
+    return super.getContents(context, ref, pagedContent).where(filter).toList();
+  }
 }

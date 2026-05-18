@@ -186,41 +186,51 @@ abstract class _PagedContentListBase<T> extends IPagedContentList<T> {
 
     final sliver = SliverPadding(
       padding: padding ?? EdgeInsets.zero,
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            if (header != null && index == 0) {
-              return header!;
-            }
-
-            final itemIndex = index - (header != null ? 1 : 0);
-            if (canLoad && itemIndex == contents.length) {
-              return buildLoading(context, ref, true);
-            }
-
-            final content = contents[itemIndex];
-            final isLast = itemIndex == contents.length - 1;
-            final T? previousContent =
-                itemIndex > 0 ? contents[itemIndex - 1] : null;
-            final T? nextContent = itemIndex < contents.length - 1
-                ? contents[itemIndex + 1]
-                : null;
-
-            if (isLast) {
-              _scheduleLoadMore(context,
-                  ref.read(getProvider(context, ref).notifier).loadMore);
-            }
-
-            return buildContent(
-                context, ref, content, isLast, previousContent, nextContent);
-          },
-          childCount:
-              contents.length + (canLoad ? 1 : 0) + (header != null ? 1 : 0),
-        ),
-      ),
+      sliver: createSliver(
+          context, ref, createDelegate(context, ref, contents, canLoad)),
     );
 
     return _buildList(context, ref, sliver);
+  }
+
+  Widget createSliver(
+      BuildContext context, WidgetRef ref, SliverChildDelegate delegate) {
+    return SliverList(
+      delegate: delegate,
+    );
+  }
+
+  SliverChildBuilderDelegate createDelegate(
+      BuildContext context, WidgetRef ref, List<T> contents, bool canLoad) {
+    return SliverChildBuilderDelegate(
+      (context, index) {
+        if (header != null && index == 0) {
+          return header!;
+        }
+
+        final itemIndex = index - (header != null ? 1 : 0);
+        if (canLoad && itemIndex == contents.length) {
+          return buildLoading(context, ref, true);
+        }
+
+        final content = contents[itemIndex];
+        final isLast = itemIndex == contents.length - 1;
+        final T? previousContent =
+            itemIndex > 0 ? contents[itemIndex - 1] : null;
+        final T? nextContent =
+            itemIndex < contents.length - 1 ? contents[itemIndex + 1] : null;
+
+        if (isLast) {
+          _scheduleLoadMore(
+              context, ref.read(getProvider(context, ref).notifier).loadMore);
+        }
+
+        return buildContent(
+            context, ref, content, isLast, previousContent, nextContent);
+      },
+      childCount:
+          contents.length + (canLoad ? 1 : 0) + (header != null ? 1 : 0),
+    );
   }
 
   Widget _buildEmpty(BuildContext context, WidgetRef ref, Widget child);
@@ -283,10 +293,7 @@ abstract class PagedContentList<T> extends _PagedContentListBase<T> {
   }
 }
 
-abstract class SliverPagedContentList<T> extends _PagedContentListBase<T> {
-  const SliverPagedContentList(
-      {super.key, required super.padding, super.header});
-
+mixin _SliverPagedContentListMixin<T> on _PagedContentListBase<T> {
   @override
   Widget _buildList(BuildContext context, WidgetRef ref, Widget sliver) {
     return sliver;
@@ -299,4 +306,83 @@ abstract class SliverPagedContentList<T> extends _PagedContentListBase<T> {
       sliver: SliverToBoxAdapter(child: child),
     );
   }
+}
+
+abstract class SliverPagedContentList<T> extends _PagedContentListBase<T>
+    with _SliverPagedContentListMixin<T> {
+  const SliverPagedContentList(
+      {super.key, required super.padding, super.header});
+}
+
+abstract class PagedContentGrid<T> extends _PagedContentListBase<T> {
+  final ScrollController? scrollController;
+  final bool reverse;
+  final bool shrinkWrap;
+  final Axis scrollDirection;
+  final ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior;
+  final bool expandEmpty;
+  final SliverGridDelegate gridDelegate;
+
+  const PagedContentGrid(
+      {super.key,
+      this.scrollController,
+      this.reverse = false,
+      this.shrinkWrap = false,
+      super.padding,
+      this.scrollDirection = Axis.vertical,
+      super.header,
+      this.keyboardDismissBehavior,
+      this.expandEmpty = true,
+      required this.gridDelegate});
+
+  @override
+  Widget _buildEmpty(BuildContext context, WidgetRef ref, Widget child) {
+    if (expandEmpty) {
+      return Flex(
+        direction: scrollDirection,
+        children: [
+          if (header != null) header!,
+          Expanded(child: child),
+        ],
+      );
+    } else {
+      return SingleChildScrollView(
+        scrollDirection: scrollDirection,
+        child: Flex(
+          direction: scrollDirection,
+          children: [
+            if (header != null) header!,
+            child,
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget createSliver(
+      BuildContext context, WidgetRef ref, SliverChildDelegate delegate) {
+    return SliverGrid(delegate: delegate, gridDelegate: gridDelegate);
+  }
+
+  @override
+  Widget _buildList(BuildContext context, WidgetRef ref, Widget sliver) {
+    return CustomScrollView(
+      controller: scrollController,
+      reverse: reverse,
+      shrinkWrap: shrinkWrap,
+      scrollDirection: scrollDirection,
+      keyboardDismissBehavior: keyboardDismissBehavior,
+      slivers: [sliver],
+    );
+  }
+}
+
+abstract class SliverPagedContentGrid<T> extends PagedContentGrid<T>
+    with _SliverPagedContentListMixin<T> {
+  const SliverPagedContentGrid(
+      {super.key,
+      required super.padding,
+      super.header,
+      required super.gridDelegate});
 }
