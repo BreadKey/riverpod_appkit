@@ -15,11 +15,11 @@ dependencies:
   riverpod_appkit:
     git:
       url: git@github.com:BreadKey/riverpod_appkit.git
-      ref: riverpod3
+      ref: main
   riverpod_appkit_repository:
     git:
       url: git@github.com:BreadKey/riverpod_appkit.git
-      ref: riverpod3
+      ref: main
       path: repository
       
 dev_dependencies:
